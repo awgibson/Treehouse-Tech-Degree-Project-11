@@ -3,8 +3,17 @@
 // load modules
 const express = require('express');
 const morgan = require('morgan');
-
+const mongoose = require('mongoose');
 const app = express();
+
+// Connect to database
+mongoose.connect('mongodb://localhost:27017/course-api', {
+  useNewUrlParser: true
+});
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', () => console.log('Database connected...'));
 
 // set our port
 app.set('port', process.env.PORT || 5000);
@@ -30,8 +39,8 @@ app.get('/', (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     message: 'Route Not Found'
-  })
-})
+  });
+});
 
 // global error handler
 app.use((err, req, res, next) => {
