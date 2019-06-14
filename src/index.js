@@ -6,6 +6,9 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const app = express();
 
+const routes = require('./routes/index');
+const api = require('./routes/api');
+
 // Connect to database
 mongoose.connect('mongodb://localhost:27017/course-api', {
   useNewUrlParser: true
@@ -22,13 +25,8 @@ app.set('port', process.env.PORT || 5000);
 app.use(morgan('dev'));
 
 // TODO add additional routes here
-
-// send a friendly greeting for the root route
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to the Course Review API'
-  });
-});
+app.use('/', routes);
+app.use('/api', api);
 
 // uncomment this route in order to test the global error handler
 // app.get('/error', function (req, res) {
@@ -47,7 +45,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
     message: err.message,
-    error: {}
+    error: { err }
   });
 });
 

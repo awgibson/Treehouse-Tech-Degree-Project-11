@@ -34,7 +34,7 @@ const CourseSchema = new mongoose.Schema({
       }
     }
   ],
-  reviews: { type: [mongoose.Schema.Types.ObjectId], ref: 'Reviews' }
+  reviews: { type: mongoose.Schema.Types.ObjectId, ref: 'Review' }
 });
 
 const Course = mongoose.model('Course', CourseSchema);
