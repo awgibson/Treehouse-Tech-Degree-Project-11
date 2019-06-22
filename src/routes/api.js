@@ -29,7 +29,7 @@ router.post('/users', (req, res, next) => {
       }
     });
   } else {
-    const err = new Error('Passwords do not match');
+    const err = new Error('Password and password confirmation do not match');
     next(err);
   }
 });
@@ -49,12 +49,17 @@ router.get('/courses', (req, res, next) => {
 
 // POST /api/courses
 router.post('/courses', mid.validateLogin, (req, res, next) => {
-  Course.create(req.body, err => {
+  const course = req.body;
+  if (req.user) {
+    course.user = req.user;
+  }
+
+  Course.create(course, err => {
     if (err) {
       next(err);
     } else {
       res
-        .location('/')
+        .location('/api/courses/' + course._id)
         .status(201)
         .end();
     }
@@ -62,7 +67,7 @@ router.post('/courses', mid.validateLogin, (req, res, next) => {
 });
 
 // PUT /api/courses:id
-router.put('/courses/:courseId', (req, res, next) => {
+router.put('/courses/:courseId', mid.validateLogin, (req, res, next) => {
   const courseUpdate = req.body;
   delete courseUpdate._id;
 
@@ -70,11 +75,12 @@ router.put('/courses/:courseId', (req, res, next) => {
     req.params.courseId,
     courseUpdate,
     { new: true },
-    err => {
+    (err, course) => {
       if (err) {
-        if (err.name === 'CastError') {
-          err.message = 'Course ID not found';
-        }
+        next(err);
+      } else if (!course) {
+        const err = new Error('Course does not exist');
+        err.status = 400;
         next(err);
       } else {
         res.status(204).end();
@@ -88,57 +94,31 @@ router.post(
   '/courses/:courseId/reviews',
   mid.validateLogin,
   (req, res, next) => {
-    Course.findById(req.params.courseId)
-      .populate('user')
-      .populate('reviews')
-      .exec(function(err, course) {
-        // const found = course.reviews.find(
-        //   review => review.user === req.user._id
-        // );
-
-        // if (found) {
-        //   console.log('already have review!');
-        // }
-
-        if (err) return next(err);
-
-        if (!course) {
-          const err = new Error('Course was not found');
-          err.status = 404;
-          next(err);
-        } else if (req.user._id === course.user._id) {
-          const err = new Error('You cannot review your own course');
-          err.status = 401;
-          next(err);
-        }
-
-        const review = new Review(req.body);
-
-        if (req.user._id) {
-          review.user = req.user._id;
-        } else {
-          const err = new Error('You must login to post a review');
-          err.status = 401;
-          next(err);
-        }
-
-        course.reviews.push(review);
-
-        course.save(err => {
-          if (err) next(err);
-        });
-
-        review.save(err => {
+    Course.findById(req.params.courseId, function(err, course) {
+      if (err) {
+        next(err);
+      } else {
+        Review.create(req.body, function(err, review) {
           if (err) {
             next(err);
           } else {
-            res
-              .status(201)
-              .location('/courses/' + req.params.courseId)
-              .end();
+            // now associate the review with the course
+            course.set({
+              reviews: [...course.reviews, review]
+            });
+            course.save(function(err, course) {
+              if (err) {
+                next(err);
+              } else {
+                res.location(`/api/courses/${req.params.courseId}`);
+                res.status(201);
+                res.end();
+              }
+            });
           }
-        });
-      });
+        }); // end Review.create
+      }
+    });
   }
 );
 
