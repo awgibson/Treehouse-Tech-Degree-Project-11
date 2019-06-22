@@ -48,7 +48,7 @@ router.get('/courses', (req, res, next) => {
 });
 
 // POST /api/courses
-router.post('/courses', (req, res, next) => {
+router.post('/courses', mid.validateLogin, (req, res, next) => {
   Course.create(req.body, err => {
     if (err) {
       next(err);

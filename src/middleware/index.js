@@ -1,5 +1,6 @@
 const auth = require('basic-auth');
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 function validateLogin(req, res, next) {
   //Grab the basic authentication header
@@ -19,15 +20,20 @@ function validateLogin(req, res, next) {
         const err = new Error(`User ${user.name} does not exist`);
         err.status = 401;
         return next(err);
-      } else if (person.password === user.pass) {
-        // If there is a user and the password matches, set req.user to equal the database entry for the user
-        req.user = person;
-        next();
-      } else if (person.password !== user.pass) {
-        // Handles password mismatch
-        const err = new Error(`Invalid password for user`);
-        err.status = 401;
-        next(err);
+      } else if (person) {
+        bcrypt.compare(user.pass, person.password, (err, res) => {
+          if (err) {
+            next(err);
+          } else if (res) {
+            req.user = user;
+            next();
+          } else if (!res) {
+            // Handles password mismatch
+            const err = new Error(`Invalid password for user`);
+            err.status = 401;
+            next(err);
+          }
+        });
       } else {
         // Handles any other errors that might occur
         const err = new Error(`There was an issue logging in`);
