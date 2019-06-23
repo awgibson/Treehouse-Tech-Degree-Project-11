@@ -79,7 +79,7 @@ router.put('/courses/:courseId', mid.validateLogin, (req, res, next) => {
         next(err);
       } else if (!course) {
         const err = new Error('Course does not exist');
-        err.status = 400;
+        err.status = 404;
         next(err);
       } else {
         res.status(204).end();

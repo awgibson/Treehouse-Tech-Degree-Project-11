@@ -1,6 +1,5 @@
 const auth = require('basic-auth');
 const User = require('../models/User');
-const bcrypt = require('bcrypt');
 
 function validateLogin(req, res, next) {
   //Grab the basic authentication header
@@ -9,7 +8,7 @@ function validateLogin(req, res, next) {
   // If there is not authentication header
   if (!user) {
     const err = new Error('Authentication data is required');
-    err.status = 400;
+    err.status = 401;
     next(err);
   } else {
     User.authenticate(user.name, user.pass, (err, user) => {
