@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const mid = require('../middleware');
 
 const Course = require('../models/Course');
@@ -10,7 +9,7 @@ const Review = require('../models/Review');
 // GET /api/users
 router.get('/users', mid.validateLogin, (req, res, next) => {
   res
-    .json(req.user)
+    .json({ _id: req.user._id, fullName: req.user.fullName })
     .status(200)
     .end();
 });
@@ -94,18 +93,30 @@ router.post(
   '/courses/:courseId/reviews',
   mid.validateLogin,
   (req, res, next) => {
+    const reviewPost = {
+      ...req.body,
+      user: {
+        _id: req.user._id
+      }
+    };
+    console.log(reviewPost);
     Course.findById(req.params.courseId, function(err, course) {
       if (err) {
         next(err);
+      } else if (req.user._id.toString() === course.user._id.toString()) {
+        const err = new Error('You cannot review your own course');
+        next(err);
       } else {
-        Review.create(req.body, function(err, review) {
+        Review.create(reviewPost, function(err, review) {
           if (err) {
             next(err);
           } else {
             // now associate the review with the course
+
             course.set({
               reviews: [...course.reviews, review]
             });
+
             course.save(function(err, course) {
               if (err) {
                 next(err);
@@ -125,8 +136,11 @@ router.post(
 // GET /api/courses/:courseID
 router.get('/courses/:courseId', (req, res, next) => {
   Course.findById(req.params.courseId)
-    .populate('user')
-    .populate('reviews')
+    .populate({ path: 'user', select: '_id fullName' })
+    .populate({
+      path: 'reviews',
+      populate: { path: 'user', select: '_id, fullName' }
+    })
     .exec((err, course) => {
       if (err || !course) {
         const err = new Error(`Unable to retrieve course.`);
