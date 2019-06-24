@@ -13,19 +13,14 @@ const testUser = {
 
 describe('GET /user route', function() {
   // Before hook
-  // Waits for database connection to a test database
+  // Waits for database connection to database
   // Creates a test user to use for the test since the users from the seed have unhashed passwords which will throw an error
   before(function(done) {
     this.enableTimeouts(false);
-    mongoose.connect('mongodb://localhost:27017/course-api');
-    const db = mongoose.connection;
-    db.on('error', console.error.bind(console, 'connection error'));
-    db.once('open', function() {
-      console.log('We are connected to test database!');
-      User.create(testUser, () => {
-        console.log('Test user created');
-        done();
-      });
+
+    User.create(testUser, () => {
+      console.log('Test user created');
+      done();
     });
   });
 
