@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+// Creates schema for the courses
+// Uses validation on the title, description, and steps
 const CourseSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,

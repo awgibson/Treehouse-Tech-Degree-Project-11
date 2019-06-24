@@ -1,10 +1,10 @@
 const app = require('../src/index');
-const mongoose = require('mongoose');
 const request = require('supertest');
 const chai = require('chai');
 const { expect } = chai;
 const User = require('../src/models/User');
 
+// Create a test user
 const testUser = {
   fullName: 'Tabby Smith',
   emailAddress: 'tabby@smith.test',
@@ -35,6 +35,9 @@ describe('GET /user route', function() {
 
   // When I make a request to the GET /api/users route with the correct credentials, the corresponding user document is returned
   it('should return a user per credentials provided with 200 status code', function(done) {
+    // Make request through the server using basic auth that matches the test user created above
+    // After the request, expect that JSON is returned, a 200 status code is received and that
+    // the user returned has the same name as the test user
     request(app)
       .get('/api/users')
       .set('Accept', 'application/json')
@@ -47,6 +50,7 @@ describe('GET /user route', function() {
       });
   });
 
+  // Make a GET request with bad credentials and expect JSON and a 401 status to be returned.
   it('return a 401 error for there being invalid', function(done) {
     request(app)
       .get('/api/users')

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// send a friendly greeting for the root route
+// GET '/' and send message for root route
 router.get('/', (req, res) => {
   res
     .json({

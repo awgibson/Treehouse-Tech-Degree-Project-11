@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+// Creates schema for the reviews
+// Uses validation on the rating
+// Defaults the date to the time of the request
 const ReviewSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
