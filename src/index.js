@@ -49,6 +49,8 @@ app.use((req, res) => {
 // global error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  // Checks if the error is a mongo error, if it is the error is passed as is
+  // If it is not a mongo error, the error json is returned in my error format
   if (err.name === 'MongoError' && err.code === 11000) {
     res.status(err.status || 500).json(err);
   } else {
